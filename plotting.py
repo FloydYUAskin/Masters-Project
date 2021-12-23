@@ -60,7 +60,7 @@ class EnergyDiagram():
         self.ax4.set_xticks([])
 
         plt.savefig(f'Graphs-Diagrams/{self.desiredMass}-EnergyDiagram')
-        plt.show()
+        
 
 if __name__ == '__main__':
     Deuterium = EnergyDiagram('D', int(sys.argv[1]))
