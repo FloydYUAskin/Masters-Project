@@ -2,6 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 from wave_functions import *
+import sys
+
+desiredMass = str(sys.argv[1])
 
 targetValuesH = np.zeros((3,3,3))
 targetValuesH[1,0,0] = 73
@@ -24,6 +27,9 @@ targetValuesD[1,0,1] = 106.5
 targetValuesD[0,2,0] = 114.2
 targetValuesD[0,1,1] = 114.5
 targetValuesD[0,0,2] = 137.1
+
+masses = {'H2':h2Mass, 'D':deuteriumMass}
+targetValues = {'H2':targetValuesH, 'D':targetValuesD}
 
 def FitFunction(boxVarMin, boxVarMax, oscVarMin, oscVarMax, accuracy, m, targetValues):
     transitionList = [[Index, Value] for Index, Value in np.ndenumerate(targetValues) if Value != 0]
@@ -80,12 +86,13 @@ def FitFunction(boxVarMin, boxVarMax, oscVarMin, oscVarMax, accuracy, m, targetV
     orderedDifference = differenceList[differencesInd]
     orderedVariables = variableList[differencesInd]
 
+    print(f'Calculated for {desiredMass}:\n SHM:\n')
     closestOsc = [simpleHarmonicOscillator3DEnergy(orderedVariables[0], [n,0,0], m) - simpleHarmonicOscillator3DEnergy(orderedVariables[0], [0,0,0], m) for n in range(0,3)]
     print(f'Deviance in Simple  Harmonic OScillator: {closestOsc - targetValues[:,0,0]}')
-    print(f'With Spring constants of: {orderedVariables[0]}')
+    print(f'With Spring constants of: {orderedVariables[0]}\n \n \n Particle in a Box: \n')
     closestBox = [particleInABox3DEnergy(orderedVariablesBox[0], [n,1,1],m) - particleInABox3DEnergy(orderedVariablesBox[0], [1,1,1],m) for n in range(1,4)]
     print(f'Deviance on Particle in a Box: {closestBox - targetValues[:,0,0]}')
-    print(f'Box Size: {orderedVariablesBox[0]}')
+    print(f'Box Size: {orderedVariablesBox[0]}\n')
 
 
     plt.hlines(closestBox, 0, 1)
@@ -95,4 +102,4 @@ def FitFunction(boxVarMin, boxVarMax, oscVarMin, oscVarMax, accuracy, m, targetV
 
     return orderedVariablesBox[0], orderedVariables[0]
 
-FitFunction(0.3,0.6,1,4,10,deuteriumMass,targetValuesD)
+FitFunction(0.3,0.6,1,4,int(sys.argv[2]),masses[desiredMass],targetValues[desiredMass])
