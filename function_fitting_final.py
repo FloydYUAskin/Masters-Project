@@ -84,7 +84,7 @@ def FitFunction(boxVarMin, boxVarMax, oscVarMin, oscVarMax, accuracy, m, targetV
     orderedDifference = differenceList[differencesInd]
     orderedVariables = variableList[differencesInd]
 
-    print(f'Calculated for {desiredMass}:\n SHM:\n')
+    print(f'Calculated for {list(masses.keys())[list(masses.values()).index(m)]}:\n SHM:\n')
     closestOsc = [simpleHarmonicOscillator3DEnergy(orderedVariables[0], [n,0,0], m) - simpleHarmonicOscillator3DEnergy(orderedVariables[0], [0,0,0], m) for n in range(0,3)]
     print(f'Deviance in Simple  Harmonic OScillator: {closestOsc - targetValues[:,0,0]}')
     print(f'With Spring constants of: {orderedVariables[0]}\n \n \n Particle in a Box: \n')
@@ -93,10 +93,6 @@ def FitFunction(boxVarMin, boxVarMax, oscVarMin, oscVarMax, accuracy, m, targetV
     print(f'Box Size: {orderedVariablesBox[0]}\n')
 
 
-    plt.hlines(closestBox, 0, 1)
-    plt.hlines(closestOsc, 1, 2)
-    plt.hlines(targetValues[:,0,0], 0, 2, color='r')
-    plt.show()
 
     return orderedVariablesBox[0], orderedVariables[0]
 
