@@ -8,8 +8,8 @@ electronMass = 1
 bohrRadius = 1
 
 hartree_to_cm = 2625.5
-h2Mass = 1837.15267
-deuteriumMass = 3673.230534
+h2Mass = 1837.15267 * 2
+deuteriumMass = 3673.230534 * 2
 
 def particleInABox1D(L, n, Array):
     return np.sin(n * np.pi * Array / L) * np.sqrt(2 / L)
