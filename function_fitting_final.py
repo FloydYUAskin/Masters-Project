@@ -4,8 +4,6 @@ import os
 from wave_functions import *
 import sys
 
-desiredMass = str(sys.argv[1])
-
 targetValuesH = np.zeros((3,3,3))
 targetValuesH[1,0,0] = 73
 targetValuesH[0,1,0] = 80.2
@@ -102,4 +100,7 @@ def FitFunction(boxVarMin, boxVarMax, oscVarMin, oscVarMax, accuracy, m, targetV
 
     return orderedVariablesBox[0], orderedVariables[0]
 
-FitFunction(0.3,0.6,1,4,int(sys.argv[2]),masses[desiredMass],targetValues[desiredMass])
+
+if __name__ == '__main__':
+    desiredMass = str(sys.argv[1])
+    FitFunction(0.3,0.6,1,4,int(sys.argv[2]),masses[desiredMass],targetValues[desiredMass])
