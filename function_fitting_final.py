@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import os
 from wave_functions import *
 import sys
+from scipy import optimize
 
 targetValuesH = np.zeros((3,3,3))
 targetValuesH[1,0,0] = 73
@@ -29,74 +30,34 @@ targetValuesD[0,0,2] = 137.1
 masses = {'H2':h2Mass, 'D':deuteriumMass}
 targetValues = {'H2':targetValuesH, 'D':targetValuesD}
 
-def FitFunction(boxVarMin, boxVarMax, oscVarMin, oscVarMax, accuracy, m, targetValues):
-    transitionList = [[Index, Value] for Index, Value in np.ndenumerate(targetValues) if Value != 0]
+def EnergyDifferenceBox(variables, particle):
+    mass = masses[particle]
+    target = targetValues[particle]
 
-    boxVariableArray = np.linspace(boxVarMin, boxVarMax, accuracy)
-    oscVariableArray = np.linspace(oscVarMin, oscVarMax, accuracy)
+    transitionList = [[Index, Value] for Index, Value in np.ndenumerate(target) if Value != 0]
+    difference = 0
+    for [transition,value] in transitionList:
+        transitionBox = particleInABox3DEnergy(variables, [transition[0]+1, transition[1]+1,transition[2]+1], mass) - particleInABox3DEnergy(variables, [1,1,1],mass)
+        difference += np.abs(transitionBox - value)
 
-    differenceListBox = []
-    variableListBox = []
+    return difference
 
-    for xIndex, xVariable in enumerate(boxVariableArray):
-        for yIndex, yVariable in enumerate(boxVariableArray):
-            for zIndex, zVariable in enumerate(boxVariableArray):
-                currentStep = (xIndex * accuracy ** 2) + (yIndex * accuracy) + zIndex
-                print(f'{currentStep * 100 / accuracy**3}%')
-                difference = 0
-                for [transition, value] in transitionList:
-                    transitionBox = particleInABox3DEnergy([xVariable, yVariable, zVariable], [transition[0]+1, transition[1]+1, transition[2]+1], m) - particleInABox3DEnergy([xVariable, yVariable, zVariable], [1,1,1], m)
-                    difference += np.abs(transitionBox - value)
-                variableListBox.append([xVariable, yVariable, zVariable])
-                differenceListBox.append(difference)
-                os.system('clear')
+def EnergyDifferenceSHM(variables, particle):
+    mass = masses[particle]
+    target = targetValues[particle]
 
-    differenceListBox = np.array(differenceListBox)
-    variableListBox = np.array(variableListBox)
+    transitionList = [[Index, Value] for Index, Value in np.ndenumerate(target) if Value != 0]
+    difference = 0
+    for [transition,value] in transitionList:
+        transitionBox = simpleHarmonicOscillator3DEnergy(variables, transition, mass) - simpleHarmonicOscillator3DEnergy(variables, [0,0,0],mass)
+        difference += np.abs(transitionBox - value)
 
-    differencesInd = np.argsort(differenceListBox)
-
-    orderedDifferenceBox = differenceListBox[differencesInd]
-    orderedVariablesBox = variableListBox[differencesInd]
-
-    differenceList = []
-    variableList = []
-
-    for xIndex, xVariable in enumerate(oscVariableArray):
-        for yIndex, yVariable in enumerate(oscVariableArray):
-            for zIndex, zVariable in enumerate(oscVariableArray):
-                currentStep = (xIndex * accuracy ** 2) + (yIndex * accuracy) + zIndex
-                print(f'{currentStep * 100 / accuracy**3}%')
-                difference = 0
-                for [transition, value] in transitionList:
-                    transitionBox = simpleHarmonicOscillator3DEnergy([xVariable, yVariable, zVariable], [transition[0], transition[1], transition[2]], m) - simpleHarmonicOscillator3DEnergy([xVariable, yVariable, zVariable], [0,0,0], m)
-                    difference += np.abs(transitionBox - value)
-                variableList.append([xVariable, yVariable, zVariable])
-                differenceList.append(difference)
-                os.system('clear')
-
-
-    differenceList = np.array(differenceList)
-    variableList = np.array(variableList)
-
-    differencesInd = np.argsort(differenceList)
-
-    orderedDifference = differenceList[differencesInd]
-    orderedVariables = variableList[differencesInd]
-
-    print(f'Calculated for {list(masses.keys())[list(masses.values()).index(m)]}:\n SHM:\n')
-    closestOsc = [simpleHarmonicOscillator3DEnergy(orderedVariables[0], [n,0,0], m) - simpleHarmonicOscillator3DEnergy(orderedVariables[0], [0,0,0], m) for n in range(0,3)]
-    print(f'Deviance in Simple  Harmonic OScillator: {closestOsc - targetValues[:,0,0]}')
-    print(f'With Spring constants of: {orderedVariables[0]}\n \n \n Particle in a Box: \n')
-    closestBox = [particleInABox3DEnergy(orderedVariablesBox[0], [n,1,1],m) - particleInABox3DEnergy(orderedVariablesBox[0], [1,1,1],m) for n in range(1,4)]
-    print(f'Deviance on Particle in a Box: {closestBox - targetValues[:,0,0]}')
-    print(f'Box Size: {orderedVariablesBox[0]}\n')
-
-
-
-    return orderedVariablesBox[0], orderedVariables[0]
-
+    return difference
 
 if __name__ == '__main__':
-    desiredMass = str(sys.argv[1])
-    FitFunction(0.3,0.6,1,4,int(sys.argv[2]),masses[desiredMass],targetValues[desiredMass])
+    minimisedBoxH2 = optimize.minimize(EnergyDifferenceBox, [1,1,1], args=('H2'))
+    minimisedBoxD = optimize.minimize(EnergyDifferenceBox, [1,1,1], args=('D'))
+    minimisedSHMH2 = optimize.minimize(EnergyDifferenceSHM, [1,1,1],args=('H2'))
+    minimisedSHMD = optimize.minimize(EnergyDifferenceSHM, [1,1,1],args=('D'))
+
+    print(f'Box H2: {minimisedBoxH2.x}\n Box D: {minimisedBoxD.x} \n SHM H2: {minimisedSHMH2.x} \n SHM D: {minimisedSHMD.x}')
